@@ -18,6 +18,7 @@
 #include "image.h"
 #include "WriteImage.h"
 #include "ReadImage.h"
+#include "Mask.h"
 
 #include "freeman_arg_parse.h" //A small utility I wrote for extracting command line args.
 
@@ -89,15 +90,6 @@ int main(int argc, char** argv)
         }
       }      
 
-      // TODO: Change naming convention 
-      std::string out_file = outputPaths[0] + original_filename + "_specified_" 
-        + original_filename_s + ".pgm";
-      char *cstr = new char[out_file.length() + 1];
-      strcpy(cstr, out_file.c_str());
-
-      std::writeImage(cstr, image_copy);
-
-      std::cout << " * Saved image: " << out_file << "\n";
       delete [] cstr;
     } //end Write to file
 
