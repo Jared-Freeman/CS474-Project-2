@@ -25,6 +25,7 @@ class ImageMask
 		int m_cols;
 		
 		//private methods
+		void AllocateMemory();
 		void ClampIndex(int& val, int lo, int hi);
 		int GetWeightedSum(
 				int N

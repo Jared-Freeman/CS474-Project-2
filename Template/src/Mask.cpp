@@ -1,6 +1,8 @@
 
 #include "Mask.h"
 
+#include <iostream>
+
 ImageMask::ImageMask():
     m_rows(0)
 ,   m_cols(0)
@@ -11,6 +13,7 @@ ImageMask::ImageMask(int rows, int cols, int** intensity_values):
     m_rows(rows)
 ,   m_cols(cols)
 {
+    AllocateMemory();
     for(int i=0; i<rows; i++)
     {
         for(int j=0; j<cols; j++)
@@ -24,6 +27,7 @@ ImageMask::ImageMask(int rows, int cols, float** intensity_values):
     m_rows(rows)
 ,   m_cols(cols)
 {
+    AllocateMemory();
     for(int i=0; i<rows; i++)
     {
         for(int j=0; j<cols; j++)
@@ -37,6 +41,7 @@ ImageMask::ImageMask(ImageType& mask_image)
 {
     int Q;
     mask_image.getImageInfo(m_rows, m_cols, Q);
+    AllocateMemory();
 
     int val = 0;
     for(int i=0; i < m_rows; i++)
@@ -47,6 +52,7 @@ ImageMask::ImageMask(ImageType& mask_image)
             m_intensity_values[i][j] = val;
         }
     }
+    
 }
 
 ImageMask::~ImageMask()
@@ -60,11 +66,22 @@ ImageMask::~ImageMask()
     }
 }
 
+// should be called after rows, cols init
+void ImageMask::AllocateMemory()
+{
+    m_intensity_values = new float* [m_rows];
+    for(int i=0; i<m_rows; i++)
+    {
+        m_intensity_values[i] = new float[m_cols];
+    }
+}
+
 void ImageMask::ApplyMask(ImageType& source_image, ImageType& output_image, bool flag_normalize)
 {
 
     //init source image vals
     int N, M, Q;
+    source_image.getImageInfo(N, M, Q);
 
     //resize output image to match source image
     output_image.CopyImageData(source_image);
@@ -82,6 +99,7 @@ void ImageMask::ApplyMask(ImageType& source_image, ImageType& output_image, bool
             output_image.setPixelVal(i, j, weighted_sum);
         }
     }
+    
 }
 
 
@@ -110,7 +128,7 @@ int ImageMask::GetWeightedSum(int N, int M, int i, int j, ImageType& ref_image, 
     float partial_sum = 0;
     int ox_s, ox_e, oy_s, oy_e; //offsets (start, end indices for x and y)
     int cur_weight = 0;
-    int xm_start, ym_start;
+    int xm_start = 0, ym_start = 0;
 
     ox_s = i - (int)(m_rows / 2);
     ox_e = i + (int)(m_rows / 2);
@@ -125,8 +143,8 @@ int ImageMask::GetWeightedSum(int N, int M, int i, int j, ImageType& ref_image, 
     }
     ClampIndex(ox_s, 0, N);
 
-    oy_s = i - (int)(m_cols / 2);
-    oy_e = i + (int)(m_cols / 2);
+    oy_s = j - (int)(m_cols / 2);
+    oy_e = j + (int)(m_cols / 2);
     //check for off-by-1 (because mask cols even)
     if(m_cols % 2 == 0) oy_e--;
 
@@ -138,9 +156,13 @@ int ImageMask::GetWeightedSum(int N, int M, int i, int j, ImageType& ref_image, 
     }
     ClampIndex(oy_s, 0, M);
 
+    // std::cout << "" << ox_s << "," << ox_e << "|" << oy_s << "," << oy_e << "|";
+    // std::cout << xm_start << "," << ym_start << "  ";// << std::endl;
+
     // scan across window bounds, add weighted partial sums
     int px_val = 0;
     float normalization_value = 0; //we don't hold a constant for this because we sometimes "zero out" sections of mask vals
+
     for(int k = ox_s, x = xm_start; k < ox_e; k++, x++)
     {
         for(int l = oy_s, y = ym_start; l < oy_e; l++, y++)

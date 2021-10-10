@@ -3,7 +3,7 @@
   * 
   *
   * @author: 
-  * Jared Freeman
+  * 
   *
   */
   
@@ -25,6 +25,7 @@
 bool FLAG_DEBUG = true;
 
 void PrintHistogram(std::map<int, float> hist);
+void WriteImageToFile(std::string filename, ImageType& img);
 
 int main(int argc, char** argv)
 {
@@ -61,13 +62,33 @@ int main(int argc, char** argv)
     std::cout << "image " << i << ": \"" << imagePaths[i] << "\"\n";
     
     ImageType next_image;
+    ImageType out_image;
     char *cstr = new char[imagePaths[i].length() + 1];
     strcpy(cstr, imagePaths[i].c_str());
     std::readImage(cstr, next_image);
 
     // DO STUFF
     // ...
-    // END DO SUFF
+
+    int sz = 5;
+    int** arr = new int*[sz];
+    for(int i=0; i<sz; i++)
+    {
+      arr[i] = new int[sz];
+      for(int j=0; j<sz; j++)
+      {
+        arr[i][j] = 1;
+      }
+    }
+
+    ImageMask test_mask(sz, sz, arr);
+    test_mask.ApplyMask(next_image, out_image);
+
+    for(int i=0; i<sz; i++)
+      delete [] arr[i];
+    delete [] arr;
+
+    // END DO STUFF
 
     { //Write to file scope
 
@@ -90,7 +111,10 @@ int main(int argc, char** argv)
         }
       }      
 
-      delete [] cstr;
+
+      std::string out_file = outputPaths[0] + original_filename + "_modified.pgm";
+      WriteImageToFile(out_file, out_image);
+
     } //end Write to file
 
     delete [] cstr;
@@ -108,4 +132,17 @@ void PrintHistogram(std::map<int, float> hist)
     std::cout << it.first << " " << it.second << std::endl;
   }
   std::cout << std::endl;
+}
+
+void WriteImageToFile(std::string filename, ImageType& img)
+{
+  std::string out_file = filename;
+  char *cstr = new char[out_file.length() + 1];
+  strcpy(cstr, out_file.c_str());
+
+  std::writeImage(cstr, img);
+
+  std::cout << " * Saved image: " << out_file << "\n";
+
+  delete [] cstr;
 }
