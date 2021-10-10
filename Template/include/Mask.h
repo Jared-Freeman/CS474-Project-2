@@ -8,23 +8,31 @@ class ImageMask
 		//ctors
 		ImageMask();
 		ImageMask(int rows, int cols, int** intensity_values);
+		ImageMask(int rows, int cols, float** intensity_values);
 		ImageMask(ImageType& mask_image);
 		
+		//dtor
+		~ImageMask();
+		
 		//methods
-		void ApplyMask(ImageType& source_image, ImageType& output_image);
+		void ApplyMask(ImageType& source_image, ImageType& output_image
+			, bool flag_normalize = true);
 		
 	private:
 		//members
-		int** m_intensity_values;
+		float** m_intensity_values;
 		int m_rows;
 		int m_cols;
 		
 		//private methods
-		int CalculateWeightedSum
-			(	ImageType& source_image
-			, ImageType& output_image
+		void ClampIndex(int& val, int lo, int hi);
+		int GetWeightedSum(
+				int N
+			, int M
 			, int i
 			, int j
+			, ImageType& ref_image
+			, bool flag_normalize = true
 			);
 		
 };

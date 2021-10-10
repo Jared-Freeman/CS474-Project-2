@@ -14,7 +14,7 @@ endif
 CXXFLAGS=-g -Wall -std=c++0x
 
 # .o Compilation
-O_FILES=main.o image.o
+O_FILES=main.o image.o Mask.o
 
 # Point to includes of local directories
 INCLUDES=-I../include
@@ -29,7 +29,8 @@ image.o: ../src/image.cpp
 main.o: ../src/main.cpp
 	$(CC) $(CXXFLAGS) -c ../src/main.cpp -o main.o $(INCLUDES)
 	
-	
+Mask.o: ../src/Mask.cpp
+	$(CC) $(CXXFLAGS) -c ../src/Mask.cpp -o Mask.o $(INCLUDES)	
 
 
 clean:
