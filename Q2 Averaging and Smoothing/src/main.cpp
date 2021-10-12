@@ -42,7 +42,6 @@ int main(int argc, char** argv)
 	//Fill data structures using args
   std::vector<std::string> imagePaths = ExtractArgs("-in", args);
   std::vector<std::string> outputPaths = ExtractArgs("-out", args);
-  std::vector<std::string> maskPaths = ExtractArgs("-mask", args);
   if(outputPaths.size() > 0 && outputPaths[0].length() > 0)
   {
     if(outputPaths[0][outputPaths[0].length()-1] != '/')
@@ -59,16 +58,7 @@ int main(int argc, char** argv)
   {
     std::cout << "Please specify an output directory using the \"-out <output_path>\" args.\n";
     return 0;
-  }  
-  if(maskPaths.size() < 1)
-  {
-    std::cout << "Please specify an image to use as a mask (add the \"-mask <image_path>\" args to command line).\n";
-    return 0;
-  }  
-  if(maskPaths.size() > 1)
-  {
-    std::cout << "Can only specify one mask path per execution. Only first mask will be used.\n";
-  }  
+  } 
   
     
   //Process each image
@@ -79,14 +69,9 @@ int main(int argc, char** argv)
     
     ImageType next_image;
     ImageType out_image;
-    ImageType mask_image;
     char *cstr = new char[imagePaths[i].length() + 1];
     strcpy(cstr, imagePaths[i].c_str());
     std::readImage(cstr, next_image);
-    
-    char *cstr2 = new char[maskPaths[0].length() + 1];
-    strcpy(cstr2, maskPaths[0].c_str());
-    std::readImage(cstr2, mask_image);
 
     // DO STUFF
     // ...
@@ -228,7 +213,6 @@ int main(int argc, char** argv)
 
 
     delete [] cstr;
-    delete [] cstr2;
 
     std::cout << "\n";
   }
