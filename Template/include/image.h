@@ -20,7 +20,7 @@ class ImageType {
    {
 			if(pixelValue != NULL)
 			{
-				std::cout << pixelValue << std::endl;
+				//std::cout << pixelValue << std::endl;
 			
 				int i;
 
