@@ -24,6 +24,7 @@
 
 bool FLAG_DEBUG = true;
 
+int ClampPxVal(int val, int lo, int hi);
 void PrintHistogram(std::map<int, float> hist);
 void WriteImageToFile(std::string filename, ImageType& img);
 
@@ -69,6 +70,7 @@ int main(int argc, char** argv)
     
     ImageType next_image;
     ImageType smoothed_image;
+    ImageType gmsk_image;
     ImageType out_image;
     char *cstr = new char[imagePaths[i].length() + 1];
     strcpy(cstr, imagePaths[i].c_str());
@@ -121,7 +123,57 @@ int main(int argc, char** argv)
 
     ImageMask mask_gaussian_7(sz, sz, arr);
     mask_gaussian_7.ApplyMask(next_image, smoothed_image);
-    // WriteImageToFile(out_file + "_gaussian_7x7.pgm", out_image);
+
+
+    gmsk_image.CopyImageData(next_image);
+    int N, M, Q;
+    next_image.getImageInfo(N,M,Q);
+
+    for(int i=0; i<N; i++)
+    {
+      for(int j=0; j<M; j++)
+      {
+        int v1,v2;
+        next_image.getPixelVal(i,j,v1);
+        smoothed_image.getPixelVal(i,j,v2);
+
+        std::cout << "[" << v1 - v2 << "]  ";
+        gmsk_image.setPixelVal(i,j,v1-v2);
+      }
+    }
+
+    out_image.CopyImageData(next_image);
+    for(int i=0; i<N; i++)
+    {
+      for(int j=0; j<M; j++)
+      {
+        int v1,v2;
+        next_image.getPixelVal(i,j,v1);
+        gmsk_image.getPixelVal(i,j,v2);
+
+        //std::cout << "[" << v1 << " " << v2 << "]  ";
+        out_image.setPixelVal(i,j,ClampPxVal(v1+v2, 0, Q));
+      }
+    }
+    WriteImageToFile(out_file + "_unsharp.pgm", out_image);
+
+    for(int k=2; k <= 8; k *= 2)
+    {
+      out_image.CopyImageData(next_image);
+      for(int i=0; i<N; i++)
+      {
+        for(int j=0; j<M; j++)
+        {
+          int v1,v2;
+          next_image.getPixelVal(i,j,v1);
+          gmsk_image.getPixelVal(i,j,v2);
+
+          //std::cout << "[" << v1 << " " << v2 << "]  ";
+          out_image.setPixelVal(i,j,ClampPxVal(v1+(k * v2), 0, Q));
+        }
+      }
+      WriteImageToFile(out_file + "_hi_boost_" + std::to_string(k) + ".pgm", out_image);
+    }
 
     for(int i=0; i<sz; i++)
       delete [] arr[i];
@@ -160,4 +212,11 @@ void WriteImageToFile(std::string filename, ImageType& img)
   std::cout << " * Saved image: " << out_file << "\n";
 
   delete [] cstr;
+}
+
+int ClampPxVal(int val, int lo, int hi)
+{
+  if(val < lo) return lo;
+  else if (val > hi) return hi;
+  else return val;
 }
