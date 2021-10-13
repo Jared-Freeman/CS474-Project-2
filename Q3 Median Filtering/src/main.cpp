@@ -204,8 +204,8 @@ int main(int argc, char** argv)
       }      
 
 
-      std::string out_file = outputPaths[0] + original_filename + "_modified.pgm";
-      WriteImageToFile(out_file, out_image);
+      // std::string out_file = outputPaths[0] + original_filename + "_modified.pgm";
+      // WriteImageToFile(out_file, out_image);
 
     } //end Write to file
 
