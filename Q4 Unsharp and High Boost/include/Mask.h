@@ -18,20 +18,7 @@ public:
 	void ApplyMask(ImageType& source_image, ImageType& output_image
 		, bool flag_normalize = true);
 
-	void ApplyUnsharpMask(ImageType& source_image, ImageType& output_image);
 	void ApplyHighBoostMask(ImageType& source_image, ImageType& output_image, int k);
-	void ApplyWeight(ImageType& source_image, int k);
-	/*
-	void ApplyLaplacian(ImageType& source_image, ImageType& output_image);
-
-	void ApplyPrewittX(ImageType& source_image, ImageType& output_image);
-	void ApplyPrewittY(ImageType& source_image, ImageType& output_image);
-	void ApplyPrewittMag(ImageType& source_image, ImageType& output_image);
-
-	void ApplySobelX(ImageType& source_image, ImageType& output_image);
-	void ApplySobelY(ImageType& source_image, ImageType& output_image);
-	void ApplySobelMag(ImageType& source_image, ImageType& output_image);
-	*/
 
 private:
 	//members
@@ -51,3 +38,4 @@ private:
 		, bool flag_normalize = true
 	);
 };
+
