@@ -137,7 +137,7 @@ int main(int argc, char** argv)
         next_image.getPixelVal(i,j,v1);
         smoothed_image.getPixelVal(i,j,v2);
 
-        std::cout << "[" << v1 - v2 << "]  ";
+        // std::cout << "[" << v1 - v2 << "]  ";
         gmsk_image.setPixelVal(i,j,v1-v2);
       }
     }

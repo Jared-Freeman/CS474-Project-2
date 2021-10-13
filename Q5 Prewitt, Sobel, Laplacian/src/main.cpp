@@ -165,11 +165,17 @@ int main(int argc, char** argv)
     std::cout << "\n\n";
 
     */
+
+
+    // sharp_image.CopyImageData(next_image);
+    // sharp_image.CombineImages(out_image, 1, true);
+    // sharp_image.CombineImages(out_image, 1, true);
+    // WriteImageToFile(out_file + "_PrewittSharp.pgm", sharp_image);
+
     ImageMask test_mask(sz, sz, arr);
 
     //test_mask.ApplyLaplacian(next_image, out_image);
 
-    sharp_image.CopyImageData(next_image);
 
     // 1ST DERIVATIVE - PREWITT AND SOBEL
     test_mask.ApplyPrewittX(next_image, out_image);
@@ -178,14 +184,11 @@ int main(int argc, char** argv)
 
     WriteImageToFile(out_file + "_PrewittX.pgm", out_image);
 
-    // sharp_image.CombineImages(out_image, 1, true);
     
     test_mask.ApplyPrewittY(next_image, out_image);
     out_image.RemapPixelValues();
     WriteImageToFile(out_file + "_PrewittY.pgm", out_image);
 
-    // sharp_image.CombineImages(out_image, 1, true);
-    WriteImageToFile(out_file + "_PrewittSharp.pgm", sharp_image);
 
     test_mask.ApplyPrewittMag(next_image, out_image);
     //out_image.scaleImageData();
