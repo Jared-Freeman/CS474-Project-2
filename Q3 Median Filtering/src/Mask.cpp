@@ -116,11 +116,34 @@ void ImageMask::ApplyMedianFilter(ImageType& source_image, ImageType& output_ima
     {
         for (int j = 0; j < M; j++)
         {
-            //Calculate weighted sum by sampling all values in window specified my mask dims
+            //Calculate median by sampling all values in window specified my mask dims
             median = GetMedian(N, M, i, j, source_image);
 
             //Store calculated value in output_image
             output_image.setPixelVal(i, j, median);
+        }
+    }
+}
+
+void ImageMask::ApplyAverageFilter(ImageType& source_image, ImageType& output_image)
+{
+    //init source image vals
+    int N, M, Q, average;
+    source_image.getImageInfo(N, M, Q);
+
+    //resize output image to match source image
+    output_image.CopyImageData(source_image);
+
+    //for each pixel value in source_image
+    for (int i = 0; i < N; i++)
+    {
+        for (int j = 0; j < M; j++)
+        {
+            //Calculate average by sampling all values in window specified by mask dims
+            average = GetAverage(N, M, i, j, source_image);
+
+            //Store calculated value in output_image
+            output_image.setPixelVal(i, j, average);
         }
     }
 }
@@ -233,4 +256,47 @@ int ImageMask::GetMedian(int N, int M, int i, int j, ImageType& ref_image)
     std::sort(medianStorage.begin(), medianStorage.end());  
     
     return medianStorage[medianStorage.size()/2];
+}
+
+int ImageMask::GetAverage(int N, int M, int i, int j, ImageType& ref_image)
+{
+    int ox_s, ox_e, oy_s, oy_e; //offsets (start, end indices for x and y)
+    int xm_start = 0, ym_start = 0;
+    int averageCount = 0, average = 0;
+
+    ox_s = i - (int)(m_rows / 2);
+    ox_e = i + (int)(m_rows / 2);
+    //check for off-by-1 (because mask rows even)
+    if (m_rows % 2 == 0) ox_e--;
+
+    ClampIndex(ox_s, 0, N - 1);
+    xm_start = m_rows - (ox_e - ox_s) - 1;
+    ClampIndex(ox_e, 0, N - 1);
+
+    oy_s = j - (int)(m_cols / 2);
+    oy_e = j + (int)(m_cols / 2);
+    //check for off-by-1 (because mask cols even)
+    if (m_cols % 2 == 0) oy_e--;
+
+    ClampIndex(oy_s, 0, M - 1);
+    ym_start = m_cols - (oy_e - oy_s) - 1;
+    ClampIndex(oy_e, 0, M - 1);
+
+    //std::cout << "" << ox_s << "," << ox_e << "|" << oy_s << "," << oy_e << "|";
+    //std::cout << xm_start << "," << ym_start << "  ";// << std::endl;
+
+    // scan across window bounds, add weighted partial sums
+    int px_val = 0;
+
+    for (int k = ox_s, x = xm_start; k <= ox_e; k++, x++)
+    {
+        for (int l = oy_s, y = ym_start; l <= oy_e; l++, y++)
+        {
+            ref_image.getPixelVal(k, l, px_val);
+            average += px_val;
+            averageCount++;
+        }
+    }
+
+    return average / averageCount;
 }

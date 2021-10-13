@@ -14,7 +14,6 @@
 #include <cstring>
 #include <map>
 #include <math.h>
-
 #include <cstdlib>
 #include <ctime>
 
@@ -27,7 +26,6 @@
 
 bool FLAG_DEBUG = true;
 
-void PrintHistogram(std::map<int, float> hist);
 void WriteImageToFile(std::string filename, ImageType& img);
 void AddNoise(ImageType& image, int noise);
 
@@ -71,9 +69,6 @@ int main(int argc, char** argv)
     strcpy(cstr, imagePaths[i].c_str());
     std::readImage(cstr, next_image);
 
-    // DO STUFF
-     // ...
-
     srand(time(0)); // seed for random numbers
 
     // GENERATE OUTPUT FILENAME CONVENTION
@@ -98,16 +93,21 @@ int main(int argc, char** argv)
     std::string out_file = outputPaths[0] + original_filename;
 
     // ADD NOISE TO SOURCE IMAGE; 30% AND 50%
-    ImageType noise30(next_image);
-    ImageType noise50(next_image);
+    ImageType noise30_med(next_image);
+    ImageType noise50_med(next_image);
+    ImageType noise30_avg(next_image);
+    ImageType noise50_avg(next_image);
 
-    AddNoise(noise30, 30);
-    AddNoise(noise50, 50);
+    AddNoise(noise30_med, 30);
+    AddNoise(noise50_med, 50);
+    AddNoise(noise30_avg, 30);
+    AddNoise(noise50_avg, 50);
 
-    WriteImageToFile(out_file + "_noise30.pgm", noise30);
-    WriteImageToFile(out_file + "_noise50.pgm", noise50);
+    // only need to print one example for each noise level
+    WriteImageToFile(out_file + "_noise30.pgm", noise30_med);   
+    WriteImageToFile(out_file + "_noise50.pgm", noise50_med);   
 
-    // MASK GENERATION
+    // MASK GENERATION - 7x7
     int sz = 7;
     int** arr = new int* [sz];
     for (int i = 0; i < sz; i++)
@@ -122,18 +122,24 @@ int main(int argc, char** argv)
     // APPLY MASKS - 7x7
     ImageMask mask_7(sz, sz, arr);
 
-    mask_7.ApplyMedianFilter(noise30, out_image);
-    WriteImageToFile(out_file + "_noise30_7x_clean.pgm", out_image);
+    mask_7.ApplyMedianFilter(noise30_med, out_image);
+    WriteImageToFile(out_file + "_noise30_7x_median.pgm", out_image);
 
-    mask_7.ApplyMedianFilter(noise50, out_image);
-    WriteImageToFile(out_file + "_noise50_7x_clean.pgm", out_image);
+    mask_7.ApplyMedianFilter(noise50_med, out_image);
+    WriteImageToFile(out_file + "_noise50_7x_median.pgm", out_image);
+
+    mask_7.ApplyAverageFilter(noise30_avg, out_image);
+    WriteImageToFile(out_file + "_noise30_7x_average.pgm", out_image);
+
+    mask_7.ApplyAverageFilter(noise50_avg, out_image);
+    WriteImageToFile(out_file + "_noise50_7x_average.pgm", out_image);
 
     for (int i = 0; i < sz; i++)
         delete[] arr[i];
     delete[] arr;
 
 
-    // MASK GENERATION
+    // MASK GENERATION - 15x15
     sz = 15;
     arr = new int* [sz];
     for (int i = 0; i < sz; i++)
@@ -147,19 +153,34 @@ int main(int argc, char** argv)
 
     ImageMask mask_15(sz, sz, arr);
 
-    // APPLY MASKS - 15x15
-    mask_15.ApplyMedianFilter(noise30, out_image);
-    WriteImageToFile(out_file + "_noise30_15x_clean.pgm", out_image);
+    // RESET NOISE FOR SECOND ROUND OF FILTERING
+    noise30_med.CopyImageData(next_image);
+    noise50_med.CopyImageData(next_image);
+    noise30_avg.CopyImageData(next_image);
+    noise50_avg.CopyImageData(next_image);
 
-    mask_15.ApplyMedianFilter(noise50, out_image);
-    WriteImageToFile(out_file + "_noise50_15x_clean.pgm", out_image);
+    AddNoise(noise30_med, 30);
+    AddNoise(noise50_med, 50);
+    AddNoise(noise30_avg, 30);
+    AddNoise(noise50_avg, 50);
+
+    // APPLY MASKS - 15x15
+    mask_15.ApplyMedianFilter(noise30_med, out_image);
+    WriteImageToFile(out_file + "_noise30_15x_median.pgm", out_image);
+
+    mask_15.ApplyMedianFilter(noise50_med, out_image);
+    WriteImageToFile(out_file + "_noise50_15x_median.pgm", out_image);
+
+    mask_15.ApplyAverageFilter(noise30_avg, out_image);
+    WriteImageToFile(out_file + "_noise30_15x_average.pgm", out_image);
+
+    mask_15.ApplyAverageFilter(noise50_avg, out_image);
+    WriteImageToFile(out_file + "_noise50_15x_average.pgm", out_image);
 
     for (int i = 0; i < sz; i++)
         delete[] arr[i];
     delete[] arr;
 
-
-    // END DO STUFF
 
     { //Write to file scope
 
@@ -197,18 +218,23 @@ int main(int argc, char** argv)
 }
 
 void AddNoise(ImageType& image, int noise)
-{
-    int row, col, Q, x; // x is a random value
-
+{   // Introduce "Salt and pepper" noise to an image
+    int row, col, Q, x;  // x is a random value. 
+    int noiseMod;   // noiseMod is the modulo factor for distributing noise
     image.getImageInfo(row, col, Q);
     float percentNoise = float(noise) / 100.0;
     int noisePixelCount = floor((row * col) * percentNoise);
+
+    if (noise == 50)
+        noiseMod = 3;
+    else
+        noiseMod = 5;
 
     for (int i = 0; i < row; i++)
     {
         for (int j = 0; j < col; j++)
         {
-            x = std::rand() % 5;
+            x = std::rand() % noiseMod;
             if (x == 0 && noisePixelCount > 0)
             {
                 x = std::rand() % 2;
@@ -219,15 +245,6 @@ void AddNoise(ImageType& image, int noise)
             }
         }
     }
-}
-
-void PrintHistogram(std::map<int, float> hist)
-{
-  for(auto it : hist)
-  {
-    std::cout << it.first << " " << it.second << std::endl;
-  }
-  std::cout << std::endl;
 }
 
 void WriteImageToFile(std::string filename, ImageType& img)

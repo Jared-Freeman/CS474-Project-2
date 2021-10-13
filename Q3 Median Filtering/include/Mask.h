@@ -21,6 +21,7 @@ public:
 		, bool flag_normalize = true);
 
 	void ApplyMedianFilter(ImageType& source_image, ImageType& output_image);
+	void ApplyAverageFilter(ImageType& source_image, ImageType& output_image);
 
 private:
 	//members
@@ -39,5 +40,16 @@ private:
 		, ImageType& ref_image
 		, bool flag_normalize = true
 	);
-	int GetMedian(int N, int M, int i, int j, ImageType& ref_image);
+	int GetMedian(
+		int N
+		, int M
+		, int i
+		, int j
+		, ImageType& ref_image);
+	int GetAverage(
+		int N
+		, int M
+		, int i
+		, int j
+		, ImageType& ref_image);
 };
