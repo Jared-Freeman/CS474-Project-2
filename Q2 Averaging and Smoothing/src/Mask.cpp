@@ -135,26 +135,18 @@ int ImageMask::GetWeightedSum(int N, int M, int i, int j, ImageType& ref_image, 
     //check for off-by-1 (because mask rows even)
     if(m_rows % 2 == 0) ox_e--;
 
-    ClampIndex(ox_e, 0, N);
-    // Sometimes mask index must be nonzero
-    if(ox_s < 0)
-    {
-        xm_start = m_rows - ox_e;
-    }
     ClampIndex(ox_s, 0, N);
+    xm_start = m_rows - (ox_e - ox_s) - 1;
+    ClampIndex(ox_e, 0, N);
 
     oy_s = j - (int)(m_cols / 2);
     oy_e = j + (int)(m_cols / 2);
     //check for off-by-1 (because mask cols even)
     if(m_cols % 2 == 0) oy_e--;
 
-    ClampIndex(oy_e, 0, M);
-    // Sometimes mask index must be nonzero
-    if(oy_s < 0)
-    {
-        ym_start = m_cols - oy_e;
-    }
     ClampIndex(oy_s, 0, M);
+    ym_start = m_cols - (oy_e - oy_s) - 1;
+    ClampIndex(oy_e, 0, M);
 
     // std::cout << "" << ox_s << "," << ox_e << "|" << oy_s << "," << oy_e << "|";
     // std::cout << xm_start << "," << ym_start << "  ";// << std::endl;
