@@ -102,49 +102,15 @@ void ImageMask::ApplyMask(ImageType& source_image, ImageType& output_image, bool
 
 }
 
-void ImageMask::ApplyUnsharpMask(ImageType& source_image, ImageType& output_image)
-{
-    int N, M, Q, R, S;
-    int k = 1;
-    source_image.getImageInfo(N, M, Q);
-    ImageType lowpass(source_image);
-    ImageType gmask(source_image);
-    output_image.CopyImageData(source_image);
-
-    ApplyMask(source_image, lowpass);   // apply smooth filter to lowpass image
-
-    // gmask = f - f_lowpass
-    for (int i = 0; i < N; i++)
-    {
-        for (int j = 0; j < M; j++)
-        {
-            source_image.getPixelVal(i, j, Q);
-            lowpass.getPixelVal(i, j, R);
-            gmask.setPixelVal(i, j, (Q - R));
-        }
-    }
-
-    // g = f + k*gmask
-    for (int i = 0; i < N; i++)
-    {
-        for (int j = 0; j < M; j++)
-        {
-            source_image.getPixelVal(i, j, Q);
-            gmask.getPixelVal(i, j, R);
-            output_image.setPixelVal(i, j, (Q + (k * R)));
-        }
-    }
-}
-
 void ImageMask::ApplyHighBoostMask(ImageType& source_image, ImageType& output_image, int k)
 {
-    int N, M, Q, R, S;
+    int N, M, Q, R;
     source_image.getImageInfo(N, M, Q);
     ImageType lowpass(source_image);
     ImageType gmask(source_image);
     output_image.CopyImageData(source_image);
 
-    ApplyMask(source_image, lowpass);   // apply smooth filter to lowpass image
+    ApplyMask(source_image, lowpass, true);   // apply smooth filter to lowpass image
 
     // gmask = f - f_lowpass
     for (int i = 0; i < N; i++)
@@ -168,186 +134,6 @@ void ImageMask::ApplyHighBoostMask(ImageType& source_image, ImageType& output_im
         }
     }
 }
-
-void ImageMask::ApplyWeight(ImageType& source_image, int k)
-{   // multiply every pixel in source image by k
-    int N, M, Q;
-    source_image.getImageInfo(N, M, Q);
-
-    for (int i = 0; i < N; i++)
-    {
-        for (int j = 0; j < M; j++)
-        {
-            source_image.getPixelVal(i, j, Q);
-            source_image.setPixelVal(i, j, (Q * k));
-        }
-    }
-}
-
-
-
-/*
-void ImageMask::ApplyLaplacian(ImageType& source_image, ImageType& output_image)
-{
-    // Set Laplcian values into mask (should be 3x3)
-    for (int i = 0; i < m_rows; i++)
-    {
-        for (int j = 0; j < m_cols; j++)
-        {
-            if (i != 1 && j != 1)
-                m_intensity_values[i][j] = 0;
-            else if (i == 1 && j == 1)
-                m_intensity_values[i][j] = -4;
-            else
-                m_intensity_values[i][j] = 1;
-        }
-    }
-
-    ApplyMask(source_image, output_image, false);
-    output_image.scaleImageData();
-    //output_image.CombineImages(source_image, -1); // c = -1 for our chosen Laplacian kernal per equation from textbook
-}
-
-void ImageMask::ApplyPrewittX(ImageType& source_image, ImageType& output_image)
-{
-    // Set Rewitt values into mask for x-dir (should be 3x3)
-    for (int i = 0; i < m_rows; i++)
-    {
-        for (int j = 0; j < m_cols; j++)
-        {
-            if (i == 0)
-                m_intensity_values[i][j] = -1;
-            else if (i == 1)
-                m_intensity_values[i][j] = 0;
-            else
-                m_intensity_values[i][j] = 1;
-        }
-    }
-    
-    ApplyMask(source_image, output_image, false);
-}
-
-void ImageMask::ApplyPrewittY(ImageType& source_image, ImageType& output_image)
-{
-    // Set Pewitt values into mask for y-dir (should be 3x3)
-    for (int i = 0; i < m_rows; i++)
-    {
-        for (int j = 0; j < m_cols; j++)
-        {
-            if (j == 0)
-                m_intensity_values[i][j] = -1;
-            else if (j == 1)
-                m_intensity_values[i][j] = 0;
-            else
-                m_intensity_values[i][j] = 1;
-        }
-    }
-
-    ApplyMask(source_image, output_image, false);
-}
-
-void ImageMask::ApplyPrewittMag(ImageType& source_image, ImageType& output_image)
-{
-    // Find magnitude of both Pewitt kernals (x and y)
-    ImageType PrewittX(source_image);
-    ImageType PrewittY(source_image);
-
-    ApplyPrewittX(source_image, PrewittX);
-    ApplyPrewittY(source_image, PrewittY);
-
-    int N, M, Q, R, S;
-    output_image.getImageInfo(N, M, Q);
-    int magnitude = 0;
-
-    for (int i = 0; i < N; i++)
-    {
-        for (int j = 0; j < M; j++)
-        {
-            PrewittX.getPixelVal(i, j, R);
-            PrewittY.getPixelVal(i, j, S);
-            magnitude = sqrt(pow(R, 2) + pow(S, 2));
-            output_image.setPixelVal(i, j, magnitude);
-        }
-    }
-    //output_image.scaleImageData();
-    //output_image.CombineImages(source_image, 1);
-}
-
-
-void ImageMask::ApplySobelX(ImageType& source_image, ImageType& output_image)
-{
-    // Set Sobel values into mask for x-dir (should be 3x3)
-    for (int i = 0; i < m_rows; i++)
-    {
-        for (int j = 0; j < m_cols; j++)
-        {
-            if (i == 0 && j != 1)
-                m_intensity_values[i][j] = -1;
-            else if (i == 0 && j == 1)
-                m_intensity_values[i][j] = -2;
-            else if (i == 2 && j != 1)
-                m_intensity_values[i][j] = 1;
-            else if (i == 2 && j == 1)
-                m_intensity_values[i][j] = 2;
-            else
-                m_intensity_values[i][j] = 0;
-        }
-    }
-
-    ApplyMask(source_image, output_image, false);
-}
-
-void ImageMask::ApplySobelY(ImageType& source_image, ImageType& output_image)
-{
-    // Set Sobel values into mask for y-dir (should be 3x3)
-    for (int i = 0; i < m_rows; i++)
-    {
-        for (int j = 0; j < m_cols; j++)
-        {
-            if (j == 0 && i != 1)
-                m_intensity_values[i][j] = -1;
-            else if (j == 0 && i == 1)
-                m_intensity_values[i][j] = -2;
-            else if (j == 2 && i != 1)
-                m_intensity_values[i][j] = 1;
-            else if (j == 2 && i == 1)
-                m_intensity_values[i][j] = 2;
-            else
-                m_intensity_values[i][j] = 0;
-        }
-    }
-    ApplyMask(source_image, output_image, false);
-}
-
-void ImageMask::ApplySobelMag(ImageType& source_image, ImageType& output_image)
-{
-    // Find magnitude of both Sobel kernals (x and y)
-    ImageType SobelX(source_image);
-    ImageType SobelY(source_image);
-
-    ApplyPrewittX(source_image, SobelX);
-    ApplyPrewittY(source_image, SobelY);
-
-    int N, M, Q, R, S;
-    output_image.getImageInfo(N, M, Q);
-    int magnitude = 0;
-
-    for (int i = 0; i < N; i++)
-    {
-        for (int j = 0; j < M; j++)
-        {
-            SobelX.getPixelVal(i, j, R);
-            SobelY.getPixelVal(i, j, S);
-            magnitude = sqrt(pow(R, 2) + pow(S, 2));
-            output_image.setPixelVal(i, j, magnitude);
-        }
-    }
-}
-*/
-
-
-
-
 
 void ImageMask::ClampIndex(int& val, int lo, int hi)
 {
@@ -381,36 +167,45 @@ int ImageMask::GetWeightedSum(int N, int M, int i, int j, ImageType& ref_image, 
     //check for off-by-1 (because mask rows even)
     if (m_rows % 2 == 0) ox_e--;
 
-    ClampIndex(ox_s, 0, N-1);
-    xm_start = m_rows - (ox_e - ox_s) - 1;
-    ClampIndex(ox_e, 0, N-1);
+    ClampIndex(ox_e, 0, N);
+    // Sometimes mask index must be nonzero
+    if (ox_s < 0)
+    {
+        xm_start = m_rows - ox_e;
+    }
+    ClampIndex(ox_s, 0, N);
 
     oy_s = j - (int)(m_cols / 2);
     oy_e = j + (int)(m_cols / 2);
     //check for off-by-1 (because mask cols even)
     if (m_cols % 2 == 0) oy_e--;
 
-    ClampIndex(oy_s, 0, M-1);
-    ym_start = m_cols - (oy_e - oy_s) - 1;
-    ClampIndex(oy_e, 0, M-1);
+    ClampIndex(oy_e, 0, M);
+    // Sometimes mask index must be nonzero
+    if (oy_s < 0)
+    {
+        ym_start = m_cols - oy_e;
+    }
+    ClampIndex(oy_s, 0, M);
 
-    //std::cout << "" << ox_s << "," << ox_e << "|" << oy_s << "," << oy_e << "|";
-    //std::cout << xm_start << "," << ym_start << "  ";// << std::endl;
+    // std::cout << "" << ox_s << "," << ox_e << "|" << oy_s << "," << oy_e << "|";
+    // std::cout << xm_start << "," << ym_start << "  ";// << std::endl;
 
     // scan across window bounds, add weighted partial sums
     int px_val = 0;
     float normalization_value = 0; //we don't hold a constant for this because we sometimes "zero out" sections of mask vals
-    for (int k = ox_s, x = xm_start; k <= ox_e; k++, x++)
+
+    for (int k = ox_s, x = xm_start; k < ox_e; k++, x++)
     {
-        for (int l = oy_s, y = ym_start; l <= oy_e; l++, y++)
+        for (int l = oy_s, y = ym_start; l < oy_e; l++, y++)
         {
             ref_image.getPixelVal(k, l, px_val);
             partial_sum += px_val * m_intensity_values[x][y];
             normalization_value += m_intensity_values[x][y];
         }
     }
-    if (flag_normalize) partial_sum /= normalization_value;
-    partial_sum = (int)partial_sum;
 
-    return partial_sum;
+    if (flag_normalize) partial_sum /= normalization_value;
+
+    return (int)partial_sum;
 }

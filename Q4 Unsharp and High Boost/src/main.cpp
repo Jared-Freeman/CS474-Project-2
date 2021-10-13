@@ -12,11 +12,7 @@
 #include <string>
 #include <fstream>
 #include <cstring>
-#include <map>
 #include <math.h>
-
-#include <cstdlib>
-#include <ctime>
 
 #include "image.h"
 #include "WriteImage.h"
@@ -27,7 +23,6 @@
 
 bool FLAG_DEBUG = true;
 
-void PrintHistogram(std::map<int, float> hist);
 void WriteImageToFile(std::string filename, ImageType& img);
 
 int main(int argc, char** argv)
@@ -70,9 +65,6 @@ int main(int argc, char** argv)
     strcpy(cstr, imagePaths[i].c_str());
     std::readImage(cstr, next_image);
 
-    // DO STUFF
-     // ...
-
     // GENERATE OUTPUT FILENAME CONVENTION
     //determine original file name from path string
     std::string original_filename = "";
@@ -114,7 +106,8 @@ int main(int argc, char** argv)
 
     ImageMask mask_gaussian_7(sz, sz, arr);
 
-    mask_gaussian_7.ApplyUnsharpMask(next_image, out_image);
+    // This is unsharp filtering: k = 1
+    mask_gaussian_7.ApplyHighBoostMask(next_image, out_image, 1);
     WriteImageToFile(out_file + "_unsharp.pgm", out_image);
 
     mask_gaussian_7.ApplyHighBoostMask(next_image, out_image, 2);
@@ -130,8 +123,6 @@ int main(int argc, char** argv)
         delete[] arr[i];
     delete[] arr;
 
-
-    // END DO STUFF
 
     { //Write to file scope
 
@@ -166,15 +157,6 @@ int main(int argc, char** argv)
   }
   
   return 0;
-}
-
-void PrintHistogram(std::map<int, float> hist)
-{
-  for(auto it : hist)
-  {
-    std::cout << it.first << " " << it.second << std::endl;
-  }
-  std::cout << std::endl;
 }
 
 void WriteImageToFile(std::string filename, ImageType& img)
