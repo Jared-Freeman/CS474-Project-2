@@ -27,7 +27,6 @@
 
 bool FLAG_DEBUG = true;
 
-void PrintHistogram(std::map<int, float> hist);
 void WriteImageToFile(std::string filename, ImageType& img);
 
 int main(int argc, char** argv)
@@ -108,74 +107,7 @@ int main(int argc, char** argv)
         }
     }
 
-    /*
-    // Just a static 5x5 array for testing
-    const int N = 6;
-    const int M = 6;
-    ImageType test(6, 6, 2);
-
-    test.setPixelVal(0, 0, 5);
-    test.setPixelVal(0, 1, 5);
-    test.setPixelVal(0, 2, 5);
-    test.setPixelVal(0, 3, 5);
-    test.setPixelVal(0, 4, 5);
-    test.setPixelVal(0, 5, 5);
-    test.setPixelVal(1, 0, 5);
-    test.setPixelVal(1, 1, 5);
-    test.setPixelVal(1, 2, 5);
-    test.setPixelVal(1, 3, 5);
-    test.setPixelVal(1, 4, 5);
-    test.setPixelVal(1, 5, 5);
-    test.setPixelVal(2, 0, 5);
-    test.setPixelVal(2, 1, 5);
-    test.setPixelVal(2, 2, 10);
-    test.setPixelVal(2, 3, 10);
-    test.setPixelVal(2, 4, 10);
-    test.setPixelVal(2, 5, 10);
-    test.setPixelVal(3, 0, 5);
-    test.setPixelVal(3, 1, 5);
-    test.setPixelVal(3, 2, 10);
-    test.setPixelVal(3, 3, 10);
-    test.setPixelVal(3, 4, 10);
-    test.setPixelVal(3, 5, 10);
-    test.setPixelVal(4, 0, 5);
-    test.setPixelVal(4, 1, 5);
-    test.setPixelVal(4, 2, 5);
-    test.setPixelVal(4, 3, 10);
-    test.setPixelVal(4, 4, 10);
-    test.setPixelVal(4, 5, 10);
-    test.setPixelVal(5, 0, 5);
-    test.setPixelVal(5, 1, 5);
-    test.setPixelVal(5, 2, 5);
-    test.setPixelVal(5, 3, 5);
-    test.setPixelVal(5, 4, 10);
-    test.setPixelVal(5, 5, 10);
-    int q;
-
-    std::cout << "test: \n";
-    for (int i = 0; i < N; ++i)
-    {
-        for (int j = 0; j < M; j++)
-        {
-            test.getPixelVal(i, j, q);
-            std::cout << q << " ";
-        }
-        std::cout << "\n";
-    }
-    std::cout << "\n\n";
-
-    */
-
-
-    // sharp_image.CopyImageData(next_image);
-    // sharp_image.CombineImages(out_image, 1, true);
-    // sharp_image.CombineImages(out_image, 1, true);
-    // WriteImageToFile(out_file + "_PrewittSharp.pgm", sharp_image);
-
     ImageMask test_mask(sz, sz, arr);
-
-    //test_mask.ApplyLaplacian(next_image, out_image);
-
 
     // 1ST DERIVATIVE - PREWITT AND SOBEL
     test_mask.ApplyPrewittX(next_image, out_image);
@@ -216,26 +148,31 @@ int main(int argc, char** argv)
     out_image.CombineImages(next_image, 1);
     WriteImageToFile(out_file + "_SobelSharp.pgm", out_image);
 
-    /*
-    int N, M, q;
-    out_image.getImageInfo(N, M, q);
-    std::cout << "Output, ApplyPrewittX: \n";
-    for (int i = 0; i < N; ++i)
+    for (int i = 0; i < sz; i++)
+        delete[] arr[i];
+    delete[] arr;
+    // 2ND DERIVATIVE - LAPLACIAN
+    // Set up mask
+    sz = 3;
+    arr = new int* [sz];
+    for (int i = 0; i < sz; i++)
     {
-        for (int j = 0; j < M; j++)
+        arr[i] = new int[sz];
+        for (int j = 0; j < sz; j++)
         {
-            out_image.getPixelVal(i, j, q);
-            std::cout << q << " ";
+            arr[i][j] = 1;
         }
-        std::cout << "\n";
     }
-    std::cout << "\n\n";
-    */
+
+    ImageMask test_mask_L(sz, sz, arr);
+
+    test_mask_L.ApplyLaplacian(next_image, out_image);
+    out_image.RemapPixelValues();
+    WriteImageToFile(out_file + "_Laplacian.pgm", out_image); // prints raw results of Laplacian
 
     for (int i = 0; i < sz; i++)
         delete[] arr[i];
     delete[] arr;
-
 
     // END DO STUFF
 
@@ -272,15 +209,6 @@ int main(int argc, char** argv)
   }
   
   return 0;
-}
-
-void PrintHistogram(std::map<int, float> hist)
-{
-  for(auto it : hist)
-  {
-    std::cout << it.first << " " << it.second << std::endl;
-  }
-  std::cout << std::endl;
 }
 
 void WriteImageToFile(std::string filename, ImageType& img)
